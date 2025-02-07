@@ -15,6 +15,7 @@ if (!gl) {
 const vertextShaderSource = `
   attribute vec2 a_position; 
   uniform float u_angle; 
+  uniform vec2 u_scale;
   void main() {
   float cosA = cos(u_angle);
   float sinA = sin(u_angle);
@@ -23,8 +24,8 @@ const vertextShaderSource = `
       a_position.x * cosA - a_position.y * sinA,
       a_position.x * sinA + a_position.y * cosA
     );
-
-    gl_Position = vec4(rotatedPosition, 0.0, 1.0); 
+    vec2 scaledPosition = rotatedPosition * u_scale;
+    gl_Position = vec4(scaledPosition, 0.0, 1.0); 
   }
 `;
 
@@ -89,7 +90,7 @@ gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 // 8. Uniform pour la translation
 const translationLocation = gl.getUniformLocation(program, 'u_translation');
 const angleLocation = gl.getUniformLocation(program, 'u_angle');
-
+const scaleLocation = gl.getUniformLocation(program, 'u_scale');
 // // 9. Dessiner le triangle
 // gl.viewport(0, 0, canvas.width, canvas.height);
 // gl.clearColor(0.0, 0.0, 0.0, 1.0); // Fond noir
@@ -110,10 +111,26 @@ function drawScene(tx, ty) {
 
 let x = -1.0; // Point de départ à gauche
 let angle = 0; 
+
+let scaleX = 1.0;
+let scaleY = 1.0;
+let growing = true; // Indique si on agrandit ou rétrécit
+
 function animate() {
     angle -= 0.02; // Augmente l'angle (sens antihoraire)
+    // Animation de l'échelle (effet "pulsation")
+    if (growing) {
+      scaleX += 0.01;
+      scaleY += 0.01;
+      if (scaleX > 1.5) growing = false; // Limite max
+    } else {
+      scaleX -= 0.01;
+      scaleY -= 0.01;
+      if (scaleX < 0.5) growing = true; // Limite min
+    }
 
     gl.uniform1f(angleLocation, angle); // Envoie l'angle au shader
+    gl.uniform2f(scaleLocation , scaleX , scaleY);
     drawScene(0, 0); // Dessiner le rectangle avec rotation
 
     requestAnimationFrame(animate);
