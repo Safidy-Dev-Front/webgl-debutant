@@ -14,9 +14,17 @@ if (!gl) {
 // Vertex Shader : détermine la position des points
 const vertextShaderSource = `
   attribute vec2 a_position; 
-  uniform vec2 u_translation; 
+  uniform float u_angle; 
   void main() {
-    gl_Position = vec4(a_position + u_translation, 0.0, 1.0); 
+  float cosA = cos(u_angle);
+  float sinA = sin(u_angle);
+  
+    vec2 rotatedPosition = vec2(
+      a_position.x * cosA - a_position.y * sinA,
+      a_position.x * sinA + a_position.y * cosA
+    );
+
+    gl_Position = vec4(rotatedPosition, 0.0, 1.0); 
   }
 `;
 
@@ -80,6 +88,7 @@ gl.enableVertexAttribArray(positionLocation);
 gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 // 8. Uniform pour la translation
 const translationLocation = gl.getUniformLocation(program, 'u_translation');
+const angleLocation = gl.getUniformLocation(program, 'u_angle');
 
 // // 9. Dessiner le triangle
 // gl.viewport(0, 0, canvas.width, canvas.height);
@@ -100,11 +109,14 @@ function drawScene(tx, ty) {
 }
 
 let x = -1.0; // Point de départ à gauche
+let angle = 0; 
 function animate() {
-  x += 0.001; // Déplacement vers la droite
-  if (x > 1.0) x = -1.0; // Revenir à gauche quand on dépasse la droite
-  drawScene(x, 0); // Translation horizontale
-  requestAnimationFrame(animate);
+    angle -= 0.02; // Augmente l'angle (sens antihoraire)
+
+    gl.uniform1f(angleLocation, angle); // Envoie l'angle au shader
+    drawScene(0, 0); // Dessiner le rectangle avec rotation
+
+    requestAnimationFrame(animate);
 }
 
 animate();
