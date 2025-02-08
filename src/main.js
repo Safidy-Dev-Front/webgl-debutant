@@ -31,8 +31,15 @@ const vertextShaderSource = `
 
 const fragmentShaderSource = `
   precision mediump float;
+  uniform float u_time;
+
+
   void main() {
-    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); 
+    float red = sin(u_time) * 0.5 + 0.5;
+    float green = cos(u_time) * 0.5 + 0.5;
+    float blue = sin(u_time * 0.7) * 0.5 + 0.5;
+
+    gl_FragColor = vec4(red, green, blue, 1.0);
   }
 `;
 
@@ -91,6 +98,7 @@ gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 const translationLocation = gl.getUniformLocation(program, 'u_translation');
 const angleLocation = gl.getUniformLocation(program, 'u_angle');
 const scaleLocation = gl.getUniformLocation(program, 'u_scale');
+const timeLocation = gl.getUniformLocation(program, 'u_time');
 // // 9. Dessiner le triangle
 // gl.viewport(0, 0, canvas.width, canvas.height);
 // gl.clearColor(0.0, 0.0, 0.0, 1.0); // Fond noir
@@ -116,7 +124,8 @@ let scaleX = 1.0;
 let scaleY = 1.0;
 let growing = true; // Indique si on agrandit ou rétrécit
 
-function animate() {
+function animate(time) {
+  const elapsedTime = time * 0.001; // Convertir en secondes
     angle -= 0.02; // Augmente l'angle (sens antihoraire)
     // Animation de l'échelle (effet "pulsation")
     if (growing) {
@@ -128,7 +137,7 @@ function animate() {
       scaleY -= 0.01;
       if (scaleX < 0.5) growing = true; // Limite min
     }
-
+    gl.uniform1f(timeLocation, elapsedTime); // Envoyer le temps au shader
     gl.uniform1f(angleLocation, angle); // Envoie l'angle au shader
     gl.uniform2f(scaleLocation , scaleX , scaleY);
     drawScene(0, 0); // Dessiner le rectangle avec rotation
