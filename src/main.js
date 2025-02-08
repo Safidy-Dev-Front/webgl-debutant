@@ -25,7 +25,7 @@ const vertextShaderSource = `
       a_position.x * cosA - a_position.y * sinA,
       a_position.x * sinA + a_position.y * cosA
     );
-    vec2 scaledPosition = rotatedPosition * u_scale;
+    vec2 scaledPosition = rotatedPosition * 1.0;
     gl_Position = vec4(scaledPosition, 0.0, 1.0); 
   }
 `;
@@ -36,11 +36,16 @@ const fragmentShaderSource = `
   uniform vec2 u_mouse; 
 
   void main() {
-    float red = sin(u_time) * 0.5 + 0.5;
-    float green = u_mouse.x;
-    float blue = u_mouse.y;
+     vec2 uv = gl_FragCoord.xy / vec2(800.0, 600.0); // Normalisation
+  float dist = distance(uv, u_mouse); // Distance entre le pixel et la souris
+  
+  // Effet de halo : plus on est proche, plus c'est lumineux
+  float glow = exp(-10.0 * dist); // Fonction exponentielle pour un effet doux
 
-    gl_FragColor = vec4(red, green, blue, 1.0);
+  // Couleur dynamique
+  vec3 color = vec3(glow, glow * 0.5, glow * sin(u_time));
+  
+  gl_FragColor = vec4(color, 1.0);
   }
 `;
 
