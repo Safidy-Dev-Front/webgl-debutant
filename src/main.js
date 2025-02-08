@@ -16,9 +16,10 @@ const vertextShaderSource = `
   attribute vec2 a_position; 
   uniform float u_angle; 
   uniform vec2 u_scale;
+  uniform vec2 u_mouserotation;
   void main() {
-  float cosA = cos(u_angle);
-  float sinA = sin(u_angle);
+  float cosA = cos(u_mouserotation.x);
+  float sinA = sin(u_mouserotation.y);
   
     vec2 rotatedPosition = vec2(
       a_position.x * cosA - a_position.y * sinA,
@@ -32,12 +33,12 @@ const vertextShaderSource = `
 const fragmentShaderSource = `
   precision mediump float;
   uniform float u_time;
-
+  uniform vec2 u_mouse; 
 
   void main() {
     float red = sin(u_time) * 0.5 + 0.5;
-    float green = cos(u_time) * 0.5 + 0.5;
-    float blue = sin(u_time * 0.7) * 0.5 + 0.5;
+    float green = u_mouse.x;
+    float blue = u_mouse.y;
 
     gl_FragColor = vec4(red, green, blue, 1.0);
   }
@@ -99,6 +100,8 @@ const translationLocation = gl.getUniformLocation(program, 'u_translation');
 const angleLocation = gl.getUniformLocation(program, 'u_angle');
 const scaleLocation = gl.getUniformLocation(program, 'u_scale');
 const timeLocation = gl.getUniformLocation(program, 'u_time');
+const mouseLocation = gl.getUniformLocation(program, 'u_mouse');
+const mouseLocationRotate = gl.getUniformLocation(program, 'u_mouserotation');
 // // 9. Dessiner le triangle
 // gl.viewport(0, 0, canvas.width, canvas.height);
 // gl.clearColor(0.0, 0.0, 0.0, 1.0); // Fond noir
@@ -117,6 +120,15 @@ function drawScene(tx, ty) {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
+let mouseX = 0.5 , mouseY = 0.5;
+canvas.addEventListener("mousemove", (event)=>{
+  const rect = canvas.getBoundingClientRect();
+  mouseX = (event.clientX - rect.left) / rect.width;
+  mouseY = 1.0 - (event.clientY - rect.top) / rect.height; // Inverser Y
+  
+  gl.uniform2f(mouseLocation, mouseX, mouseY);
+  gl.uniform2f(mouseLocationRotate, mouseX, mouseY);
+})
 let x = -1.0; // Point de départ à gauche
 let angle = 0; 
 
@@ -140,6 +152,8 @@ function animate(time) {
     gl.uniform1f(timeLocation, elapsedTime); // Envoyer le temps au shader
     gl.uniform1f(angleLocation, angle); // Envoie l'angle au shader
     gl.uniform2f(scaleLocation , scaleX , scaleY);
+    gl.uniform2f(mouseLocation, mouseX, mouseY);
+    gl.uniform2f(mouseLocationRotate, mouseX, mouseY);
     drawScene(0, 0); // Dessiner le rectangle avec rotation
 
     requestAnimationFrame(animate);
